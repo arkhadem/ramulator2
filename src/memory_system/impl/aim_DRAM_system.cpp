@@ -63,7 +63,7 @@ protected:
             if (ch_mask_u & (0x1 << i)) {
                 ch_mask_u &= ~(0x1 << i);
                 ch_mask = ch_mask_u;
-                return MAX_CHANNEL_COUNT - 1 - i;
+                return i;
             }
         }
 
@@ -302,12 +302,12 @@ public:
                             aim_req.row_addr = host_req.row_addr;
 
                         if (opsize == -1)
-                            opsize = 1;
+                            opsize = 0;
 
                         if (host_req.col_addr == -1)
                             host_req.col_addr = 0;
 
-                        for (int i = 0; i < opsize; i++) {
+                        for (int i = 0; i <= opsize; i++) {
                             int64_t channel_mask = ch_mask;
 
                             // if (aim_ISR.is_field_legal(AiMISR::Field::col_addr) == true)
