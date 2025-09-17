@@ -66,7 +66,7 @@ public:
         for (const auto type : {Type::Read, Type::Write}) {
             s_num_RW_cycles[type] = 0;
             register_stat(s_num_RW_cycles[type])
-                .name(fmt::format("CH{}_{}_cycles",
+                .name(fmt::format("CH{}_cycles_{}",
                                   m_channel_id,
                                   AiMISRInfo::convert_type_to_str(type)));
         }
@@ -74,28 +74,23 @@ public:
         for (int opcode = (int)Opcode::MIN + 1; opcode < (int)Opcode::MAX; opcode++) {
             s_num_AiM_cycles[(Opcode)opcode] = 0;
             register_stat(s_num_AiM_cycles[(Opcode)opcode])
-                .name(fmt::format("CH{}_AiM_{}_cycles", m_channel_id, AiMISRInfo::convert_AiM_opcode_to_str((Opcode)opcode)))
-                .desc(fmt::format("total number of AiM {} cycles", AiMISRInfo::convert_AiM_opcode_to_str((Opcode)opcode)));
+                .name(fmt::format("CH{}_cycles_AiM_{}", m_channel_id, AiMISRInfo::convert_AiM_opcode_to_str((Opcode)opcode)));
         }
 
         for (int command_id = 0; command_id < m_dram->m_commands.size(); command_id++) {
             s_num_commands[command_id] = 0;
             register_stat(s_num_commands[command_id])
-                .name(fmt::format("CH{}_num_{}_commands", m_channel_id, std::string(m_dram->m_commands(command_id))))
-                .desc(fmt::format("total number of {} commands", std::string(m_dram->m_commands(command_id))));
+                .name(fmt::format("CH{}_commands_{}", m_channel_id, std::string(m_dram->m_commands(command_id))));
         }
 
         register_stat(s_num_idle_cycles)
-            .name(fmt::format("CH{}_idle_cycles", m_channel_id))
-            .desc(fmt::format("total number of idle cycles"));
+            .name(fmt::format("CH{}_cycles_idle", m_channel_id));
 
         register_stat(s_num_active_cycles)
-            .name(fmt::format("CH{}_active_cycles", m_channel_id))
-            .desc(fmt::format("total number of active cycles"));
+            .name(fmt::format("CH{}_cycles_active", m_channel_id));
 
         register_stat(s_num_precharged_cycles)
-            .name(fmt::format("CH{}_precharged_cycles", m_channel_id))
-            .desc(fmt::format("total number of precharged cycles"));
+            .name(fmt::format("CH{}_cycles_precharged", m_channel_id));
     };
 
     bool compare_addr_vec(Request req1, Request req2, int min_compared_level) {
