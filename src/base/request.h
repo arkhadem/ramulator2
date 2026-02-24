@@ -51,7 +51,8 @@ enum class Opcode {
     ISR_WR_ABK = 15,   // Write [16 x 16 bits] from [GPR * 32] to [16 banks] of channel [#channel_address]
     ISR_EOC = 16,      // End of compute for the current kernel
     ISR_SYNC = 17,
-    MAX = 18
+    ISR_MIN = 18, //Perform Multistage Interconnectin
+    MAX = 19
     // ISR_WR_HBK,    // [NOT_IMPLEMENTED] Write data from [GPR] to [8 banks]
     // ISR_WR_ABK,    // [NOT_IMPLEMENTED] Write data from [GPR] to [all banks]
     // ISR_WR_GPR,    // [NOT_IMPLEMENTED] Write data from [host] to [GPR]

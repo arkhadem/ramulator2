@@ -63,7 +63,8 @@ public:
              1,    // nCWLGB
              1,    // nWPRE
              32,   // nMODCH
-             570   // tCK_ps
+             570,   // tCK_ps
+             8	//nSHUFFLE
          }},
 
         {"GDDR6_2000_1250mV_double", // name
@@ -101,7 +102,8 @@ public:
              1,    // nCWLGB
              1,    // nWPRE
              32,   // nMODCH
-             570   // tCK_ps
+             570,   // tCK_ps
+             8	//nSHUFFLE
          }},
 
         {"GDDR6_2000_1350mV_quad", // name
@@ -139,7 +141,8 @@ public:
              1,    // nCWLGB
              1,    // nWPRE
              32,   // nMODCH
-             570   // tCK_ps
+             570,   // tCK_ps
+             8	//nSHUFFLE
          }},
 
         {"GDDR6_2000_1250mV_quad", // name
@@ -177,7 +180,8 @@ public:
              1,    // nCWLGB
              1,    // nWPRE
              32,   // nMODCH
-             570   // tCK_ps
+             570,   // tCK_ps
+             8	//nSHUFFLE
          }},
 
         {"GDDR6_AiM_timing", // name
@@ -215,7 +219,8 @@ public:
              1,    // nCWLGB
              1,    // nWPRE
              32,   // nMODCH
-             500   // tCK_ps
+             500,   // tCK_ps
+             8	//nSHUFFLE
          }},
     };
 
@@ -263,6 +268,7 @@ public:
         "TMOD",
         "SYNC",
         "EOC",
+        "SHUFFLE", //NEW
         "UNKNOWN"};
 
     inline static const ImplLUT m_command_scopes = LUT(
@@ -293,6 +299,7 @@ public:
                                   {"TMOD", "channel"},
                                   {"SYNC", "channel"},
                                   {"EOC", "channel"},
+                                  {"SHUFFLE", "channel"},//NEW: channel level
                               });
 
     inline static const ImplLUT m_command_meta = LUT<DRAMCommandMeta>(
@@ -324,6 +331,7 @@ public:
                         {"TMOD", {false, false, false, false}},
                         {"SYNC", {false, false, false, false}},
                         {"EOC", {false, false, false, false}},
+                        {"SHUFFLE", {false, false, false, false}},//NEW: (it does not open or close rows, access banks, or trigger refreshes)
                     });
 
     inline static constexpr ImplDef m_requests = {
@@ -351,6 +359,7 @@ public:
         "ISR_WR_ABK",
         "ISR_SYNC",
         "ISR_EOC",
+        "ISR_MIN",	//NEW
         "MAX"};
 
     inline static const ImplLUT m_request_translations = LUT(
@@ -381,6 +390,9 @@ public:
                                         {"ISR_WR_ABK", "WRA16"},     // 1 - Write single bank
                                         {"ISR_SYNC", "SYNC"},        // 16 - Unknown and illegal
                                         {"ISR_EOC", "EOC"},          // 16 - Unknown and illegal
+                                        {"ISR_MIN", "SHUFFLE"},
+                                        //NEW
+                                        
                                         {"MAX", "UNKNOWN"},          // 17 - Unknown and illegal
                                     });
 
@@ -422,7 +434,9 @@ public:
         "nCWLGB",
         "nWPRE",
         "nMODCH",
-        "tCK_ps"};
+        "tCK_ps",
+        "nSHUFFLE"//NEW
+        };
 
     /************************************************
    *                 Node States
@@ -768,11 +782,30 @@ private:
         m_command_latencies("WRA16") = m_timing_vals("nCWL") + m_timing_vals("nBL") + m_timing_vals("nRP");
         m_command_latencies("SYNC") = 1;
         m_command_latencies("EOC") = 1;
+        m_command_latencies("SHUFFLE") = 1; //NEW
 
 // Populate the timing constraints
 #define V(timing) (m_timing_vals(timing))
         populate_timingcons(this, {
                                       /****************************************************** Channel ******************************************************/
+                                      // MIN Routing Delay (SHUFFLE constraints)
+				// 1. You cannot SHUFFLE until the Global Buffer receives the data from RDCP
+				// The latency depends on nBL (burst length) for data to fully populate the SRAM
+				{.level = "channel", .preceding = {"RDCP"}, .following = {"SHUFFLE"}, .latency = V("nBL")},
+				
+				// 2. You cannot WRCP (Write from GB to Bank) until the MIN finishes routing
+				{.level = "channel", .preceding = {"SHUFFLE"}, .following = {"WRCP"}, .latency = V("nSHUFFLE")},
+				
+				// 3. Prevent back-to-back shuffles from overlapping in the MIN logic
+				{.level = "channel", .preceding = {"SHUFFLE"}, .following = {"SHUFFLE"}, .latency = V("nSHUFFLE")},
+				
+				
+				
+				
+				
+				
+				
+				
                                       // CAS <-> CAS
                                       /// External data bus occupancy
                                       /// AiM commands that transfer data on the external bus
